@@ -3,11 +3,12 @@ import runningIcon from './assets/running.gif'
 import chestIcon from './assets/chest.gif'
 import absIcon from './assets/abs.gif'
 import legsIcon from './assets/legs.gif'
+import basketballIcon from './assets/basketball.gif'
 import beforeAfterImage from './assets/before after.jpg'
 import type { ChangeEvent } from 'react'
 import './App.css'
 
-type WorkoutTab = 'running' | 'chest' | 'abs' | 'legs'
+type WorkoutTab = 'running' | 'chest' | 'abs' | 'legs' | 'basketball'
 
 type StrengthBlock = {
   reps: [string, string, string]
@@ -20,6 +21,7 @@ type WorkoutDay = {
   date: string
   runningCalories: string
   runningDone: boolean
+  basketballMinutes: string
   chest: StrengthBlock
   abs: StrengthBlock
   legs: StrengthBlock
@@ -42,6 +44,7 @@ type WorkoutProgram = {
 }
 
 const STORAGE_KEY = 'workout-program-v2'
+const BASKETBALL_3X3_KCAL_PER_MINUTE = 9
 
 const createId = () =>
   (typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -61,6 +64,7 @@ const createDay = (): WorkoutDay => ({
   date: todayString(),
   runningCalories: '',
   runningDone: false,
+  basketballMinutes: '',
   chest: createStrengthBlock(),
   abs: createStrengthBlock(),
   legs: createStrengthBlock(),
@@ -109,11 +113,18 @@ const normalizeWorkoutDay = (value: unknown): WorkoutDay => {
     runningCalories:
       typeof day.runningCalories === 'string' ? day.runningCalories : '',
     runningDone: Boolean(day.runningDone),
+    basketballMinutes:
+      typeof day.basketballMinutes === 'string' ? day.basketballMinutes : '',
     chest: normalizeStrengthBlock(day.chest),
     abs: normalizeStrengthBlock(day.abs),
     legs: normalizeStrengthBlock(day.legs),
     completed: Boolean(day.completed),
   }
+}
+
+const getBasketballCalories = (day: WorkoutDay) => {
+  const minutes = Number(day.basketballMinutes) || 0
+  return Math.round(minutes * BASKETBALL_3X3_KCAL_PER_MINUTE)
 }
 
 const normalizeProgram = (value: WorkoutProgram): WorkoutProgram => {
@@ -164,10 +175,11 @@ const sumStrengthCalories = (block: StrengthBlock, factor: number) => {
 
 const getDayCalories = (day: WorkoutDay) => {
   const running = day.runningDone ? Number(day.runningCalories) || 0 : 0
+  const basketball = getBasketballCalories(day)
   const chest = sumStrengthCalories(day.chest, 0.08)
   const abs = sumStrengthCalories(day.abs, 0.055)
   const legs = sumStrengthCalories(day.legs, 0.09)
-  return running + chest + abs + legs
+  return running + basketball + chest + abs + legs
 }
 
 const getCoachMessage = (day: WorkoutDay) => {
@@ -552,6 +564,14 @@ function App() {
                     <img src={legsIcon} className="tab-icon-gif" alt="Legs" />
                     רגליים
                   </button>
+
+                  <button
+                    className={`tab-card ${activeTab === 'basketball' ? 'selected' : ''}`}
+                    onClick={() => setActiveTab('basketball')}
+                  >
+                    <img src={basketballIcon} className="tab-icon-gif" alt="Basketball" />
+                    כדורסל 3x3
+                  </button>
                 </div>
 
                 {activeTab === 'running' && (
@@ -581,6 +601,29 @@ function App() {
                     >
                       {selectedDay.runningDone ? 'ריצה הושלמה ✓' : 'סמן ריצה כבוצעה'}
                     </button>
+                  </div>
+                )}
+
+                {activeTab === 'basketball' && (
+                  <div className="tab-panel">
+                    <label>
+                      זמן משחק נטו (דקות)
+                      <input
+                        type="number"
+                        value={selectedDay.basketballMinutes}
+                        onChange={(event) =>
+                          updateDay(selectedDay.id, (day) => ({
+                            ...day,
+                            basketballMinutes: event.target.value,
+                          }))
+                        }
+                        placeholder="לדוגמה: 25"
+                      />
+                    </label>
+
+                    <p className="meta-inline">
+                      קלוריות כדורסל 3x3 (משוער): <strong>{getBasketballCalories(selectedDay)}</strong>
+                    </p>
                   </div>
                 )}
 
