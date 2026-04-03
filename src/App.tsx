@@ -76,6 +76,64 @@ const createDefaultProgram = (): WorkoutProgram => ({
   weeklyPhotos: [],
 })
 
+const normalizeStrengthBlock = (value: unknown): StrengthBlock => {
+  if (!value || typeof value !== 'object') {
+    return createStrengthBlock()
+  }
+
+  const block = value as Partial<StrengthBlock>
+  const reps: [string, string, string] = [0, 1, 2].map((index) => {
+    const rep = block.reps?.[index]
+    return typeof rep === 'string' ? rep : '10'
+  }) as [string, string, string]
+  const setDone: [boolean, boolean, boolean] = [0, 1, 2].map((index) =>
+    Boolean(block.setDone?.[index]),
+  ) as [boolean, boolean, boolean]
+
+  return {
+    reps,
+    setDone,
+    weight: typeof block.weight === 'string' ? block.weight : '20',
+  }
+}
+
+const normalizeWorkoutDay = (value: unknown): WorkoutDay => {
+  if (!value || typeof value !== 'object') {
+    return createDay()
+  }
+
+  const day = value as Partial<WorkoutDay>
+  return {
+    id: typeof day.id === 'string' ? day.id : createId(),
+    date: typeof day.date === 'string' ? day.date : todayString(),
+    runningCalories:
+      typeof day.runningCalories === 'string' ? day.runningCalories : '',
+    runningDone: Boolean(day.runningDone),
+    chest: normalizeStrengthBlock(day.chest),
+    abs: normalizeStrengthBlock(day.abs),
+    legs: normalizeStrengthBlock(day.legs),
+    completed: Boolean(day.completed),
+  }
+}
+
+const normalizeProgram = (value: WorkoutProgram): WorkoutProgram => {
+  const normalizedDays = value.workoutDays.map((day) => normalizeWorkoutDay(day))
+
+  return {
+    ...value,
+    workoutDays: normalizedDays.length > 0 ? normalizedDays : [createDay()],
+    weeklyPhotos: value.weeklyPhotos.filter(
+      (photo): photo is WeeklyPhoto =>
+        Boolean(
+          photo &&
+            typeof photo.id === 'string' &&
+            typeof photo.date === 'string' &&
+            typeof photo.imageDataUrl === 'string',
+        ),
+    ),
+  }
+}
+
 const isValidProgram = (value: unknown): value is WorkoutProgram => {
   if (!value || typeof value !== 'object') {
     return false
@@ -136,7 +194,7 @@ function App() {
 
       const parsed = JSON.parse(raw) as unknown
       if (isValidProgram(parsed)) {
-        return parsed
+        return normalizeProgram(parsed)
       }
     } catch {
       // Fall back to default state.
@@ -297,7 +355,10 @@ function App() {
         return
       }
 
-      setProgram({ ...data, updatedAt: new Date().toISOString() })
+      setProgram({
+        ...normalizeProgram(data),
+        updatedAt: new Date().toISOString(),
+      })
       setSelectedDayId(data.workoutDays[0]?.id ?? '')
       setImportMessage('הייבוא הצליח והנתונים נטענו.')
     } catch {
