@@ -280,6 +280,68 @@ button:disabled {
   gap: 1rem;
 }
 
+.workspace-grid,
+.panel,
+.tabs-wrap,
+.tab-panel,
+.tabs-row,
+.month-grid,
+.gallery-controls,
+.compare-grid,
+.summary-grid,
+.reps-grid {
+  min-width: 0;
+}
+
+.tabs-row > *,
+.compare-grid > *,
+.month-grid > *,
+.summary-grid > *,
+.reps-grid > * {
+  min-width: 0;
+}
+
+.inline-actions,
+.gallery-controls,
+.month-grid,
+.compare-grid,
+.summary-grid,
+.reps-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.inline-actions,
+.gallery-controls {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.month-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.summary-grid,
+.reps-grid,
+.compare-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.compare-card,
+.month-card,
+.summary-item,
+.rep-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 0.9rem;
+}
+
+.compare-card img {
+  width: 100%;
+  display: block;
+  border-radius: 0.8rem;
+}
+
 .tabs-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -287,6 +349,10 @@ button:disabled {
 }
 
 @media (max-width: 700px) {
+  .page-shell {
+    padding-inline: 0.65rem;
+  }
+
   .two-columns {
     grid-template-columns: 1fr;
   }
@@ -319,6 +385,17 @@ button:disabled {
   .tabs-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.85rem;
+  }
+
+  .summary-grid,
+  .reps-grid,
+  .compare-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .day-chip:hover,
+  button:hover {
+    transform: none;
   }
 
   .tab-icon-gif {
