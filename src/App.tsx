@@ -2,10 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import runningIcon from './assets/running.gif'
 import chestIcon from './assets/chest.gif'
 import absIcon from './assets/abs.gif'
+import legsIcon from './assets/legs.gif'
+import beforeAfterImage from './assets/before after.jpg'
 import type { ChangeEvent } from 'react'
 import './App.css'
 
-type WorkoutTab = 'running' | 'chest' | 'abs'
+type WorkoutTab = 'running' | 'chest' | 'abs' | 'legs'
 
 type StrengthBlock = {
   reps: [string, string, string]
@@ -20,6 +22,7 @@ type WorkoutDay = {
   runningDone: boolean
   chest: StrengthBlock
   abs: StrengthBlock
+  legs: StrengthBlock
   completed: boolean
 }
 
@@ -60,6 +63,7 @@ const createDay = (): WorkoutDay => ({
   runningDone: false,
   chest: createStrengthBlock(),
   abs: createStrengthBlock(),
+  legs: createStrengthBlock(),
   completed: false,
 })
 
@@ -104,7 +108,8 @@ const getDayCalories = (day: WorkoutDay) => {
   const running = day.runningDone ? Number(day.runningCalories) || 0 : 0
   const chest = sumStrengthCalories(day.chest, 0.08)
   const abs = sumStrengthCalories(day.abs, 0.055)
-  return running + chest + abs
+  const legs = sumStrengthCalories(day.legs, 0.09)
+  return running + chest + abs + legs
 }
 
 const getCoachMessage = (day: WorkoutDay) => {
@@ -229,7 +234,7 @@ function App() {
   }
 
   const updateStrengthSet = (
-    type: 'chest' | 'abs',
+    type: 'chest' | 'abs' | 'legs',
     setIndex: number,
     value: string,
   ) => {
@@ -245,7 +250,7 @@ function App() {
     })
   }
 
-  const toggleStrengthSetDone = (type: 'chest' | 'abs', setIndex: number) => {
+  const toggleStrengthSetDone = (type: 'chest' | 'abs' | 'legs', setIndex: number) => {
     if (!selectedDay) {
       return
     }
@@ -478,6 +483,14 @@ function App() {
                     <img src={absIcon} className="tab-icon-gif" alt="Abs" />
                     בטן
                   </button>
+
+                  <button
+                    className={`tab-card ${activeTab === 'legs' ? 'selected' : ''}`}
+                    onClick={() => setActiveTab('legs')}
+                  >
+                    <img src={legsIcon} className="tab-icon-gif" alt="Legs" />
+                    רגליים
+                  </button>
                 </div>
 
                 {activeTab === 'running' && (
@@ -510,7 +523,7 @@ function App() {
                   </div>
                 )}
 
-                {(activeTab === 'chest' || activeTab === 'abs') && (
+                {(activeTab === 'chest' || activeTab === 'abs' || activeTab === 'legs') && (
                   <div className="tab-panel">
                     <label>
                       משקל הרמה (ק"ג)
@@ -555,11 +568,12 @@ function App() {
                     </div>
 
                     <p className="meta-inline">
-                      קלוריות {activeTab === 'chest' ? 'חזה' : 'בטן'}: 
+                      קלוריות{' '}
+                      {activeTab === 'chest' ? 'חזה' : activeTab === 'abs' ? 'בטן' : 'רגליים'}:{' '}
                       <strong>
                         {sumStrengthCalories(
                           selectedDay[activeTab],
-                          activeTab === 'chest' ? 0.08 : 0.055,
+                          activeTab === 'chest' ? 0.08 : activeTab === 'abs' ? 0.055 : 0.09,
                         )}
                       </strong>
                     </p>
@@ -579,9 +593,11 @@ function App() {
                       <small>סטים שהושלמו</small>
                       <strong>
                         {
-                          [...selectedDay.chest.setDone, ...selectedDay.abs.setDone].filter(
-                            Boolean,
-                          ).length
+                          [
+                            ...selectedDay.chest.setDone,
+                            ...selectedDay.abs.setDone,
+                            ...selectedDay.legs.setDone,
+                          ].filter(Boolean).length
                         }
                       </strong>
                     </div>
@@ -669,6 +685,11 @@ function App() {
         </div>
 
         <div className="compare-grid">
+          <article className="compare-card">
+            <h3>לפני ואחרי</h3>
+            <img src={beforeAfterImage} alt="Before and After" />
+          </article>
+
           <article className="compare-card">
             <h3>לפני</h3>
             {compareBefore ? (
